@@ -7,7 +7,7 @@ Workshop for learning security best practices
 ## Raspberry Pi Station
 
 ```
-
+wget https://raw.githubusercontent.com/ndouglas-cloudsmith/helm-workshop/refs/heads/main/cloudsmith-game.sh
 ```
 
 
