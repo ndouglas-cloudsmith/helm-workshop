@@ -116,41 +116,38 @@ while true; do
     echo ""
 
     cloudsmith tags add "$REPO_PATH/$PACKAGE_NAME" "$NEW_TAG" -k "$CLOUDSMITH_API_KEY"
-
     if [[ $? -eq 0 ]]; then
       echo "✅ Tag '$NEW_TAG' assigned successfully!"
-
-      # Ask about removing a tag now
-      echo ""
-      read -p "🗑️  Would you like to remove a tag from this package? (y/n): " REMOVE_TAG_CHOICE
-      if [[ "$REMOVE_TAG_CHOICE" == "y" || "$REMOVE_TAG_CHOICE" == "Y" ]]; then
-        read -p "📝 Enter the tag you'd like to remove: " REMOVE_TAG
-        echo ""
-
-        TAG_REMOVE_CMD="cloudsmith tags remove \"$REPO_PATH/$PACKAGE_NAME\" \"$REMOVE_TAG\" -k \"\$CLOUDSMITH_API_KEY\""
-        echo "🗑️  Removing tag '$REMOVE_TAG' from package '$PACKAGE_NAME'..."
-        echo -n "+ "
-        for ((i=0; i<${#TAG_REMOVE_CMD}; i++)); do
-          echo -n "${TAG_REMOVE_CMD:$i:1}"
-          sleep 0.02
-        done
-        echo ""
-
-        cloudsmith tags remove "$REPO_PATH/$PACKAGE_NAME" "$REMOVE_TAG" -k "$CLOUDSMITH_API_KEY"
-        if [[ $? -eq 0 ]]; then
-          echo "✅ Tag '$REMOVE_TAG' removed successfully!"
-        else
-          echo "❌ Failed to remove tag. Please check the tag name or permissions."
-        fi
-      else
-        echo "👍 Skipping tag removal."
-      fi
-
     else
       echo "❌ Failed to assign tag. Please check the tag format or permissions."
     fi
   else
     echo "👍 Skipping tag assignment."
+  fi
+
+  echo ""
+  read -p "🗑️  Would you like to remove a tag from this package? (y/n): " REMOVE_TAG_CHOICE
+  if [[ "$REMOVE_TAG_CHOICE" == "y" || "$REMOVE_TAG_CHOICE" == "Y" ]]; then
+    read -p "📝 Enter the tag you'd like to remove: " REMOVE_TAG
+    echo ""
+
+    TAG_REMOVE_CMD="cloudsmith tags remove \"$REPO_PATH/$PACKAGE_NAME\" \"$REMOVE_TAG\" -k \"\$CLOUDSMITH_API_KEY\""
+    echo "🗑️  Removing tag '$REMOVE_TAG' from package '$PACKAGE_NAME'..."
+    echo -n "+ "
+    for ((i=0; i<${#TAG_REMOVE_CMD}; i++)); do
+      echo -n "${TAG_REMOVE_CMD:$i:1}"
+      sleep 0.02
+    done
+    echo ""
+
+    cloudsmith tags remove "$REPO_PATH/$PACKAGE_NAME" "$REMOVE_TAG" -k "$CLOUDSMITH_API_KEY"
+    if [[ $? -eq 0 ]]; then
+      echo "✅ Tag '$REMOVE_TAG' removed successfully!"
+    else
+      echo "❌ Failed to remove tag. Please check the tag name or permissions."
+    fi
+  else
+    echo "👍 Skipping tag removal."
   fi
 
   echo ""
