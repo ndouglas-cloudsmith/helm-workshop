@@ -18,4 +18,16 @@ echo ""
 echo "🔍 Scanning for packages in '$REPO_PATH'..."
 echo ""
 
+# Build the command string
+CMD="cloudsmith list packages \"$REPO_PATH\" -k \"\$CLOUDSMITH_API_KEY\""
+
+# Typewriter effect
+echo -n "+ "
+for ((i=0; i<${#CMD}; i++)); do
+  echo -n "${CMD:$i:1}"
+  sleep 0.02
+done
+echo ""
+
+# Actually run the command
 cloudsmith list packages "$REPO_PATH" -k "$CLOUDSMITH_API_KEY"
