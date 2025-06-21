@@ -13,6 +13,6 @@ wget https://raw.githubusercontent.com/ndouglas-cloudsmith/helm-workshop/refs/he
 
 ```
 source ./set-env.sh
-chmod +x simple-cloudsmith-game.sh
-./simple-cloudsmith-game.sh
+chmod +x cloudsmith-game.sh
+./cloudsmith-game.sh
 ```
