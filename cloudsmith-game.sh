@@ -46,19 +46,10 @@ while true; do
   [[ "$FILTER_CHOICE" == "z" ]] && continue
 
   case "$FILTER_CHOICE" in
-    1)
-      FILTER_NAME="python"
-      ;;
-    2)
-      FILTER_NAME="helm"
-      ;;
-    3)
-      FILTER_NAME="docker"
-      ;;
-    *)
-      echo "❌ Invalid choice. Please try again."
-      continue
-      ;;
+    1) FILTER_NAME="python" ;;
+    2) FILTER_NAME="helm" ;;
+    3) FILTER_NAME="docker" ;;
+    *) echo "❌ Invalid choice. Please try again." && continue ;;
   esac
 
   echo ""
@@ -72,7 +63,6 @@ while true; do
     sleep 0.02
   done
   echo ""
-
   cloudsmith list packages "$REPO_PATH" -q "format:$FILTER_NAME" -k "$CLOUDSMITH_API_KEY"
 
   echo ""
@@ -148,6 +138,53 @@ while true; do
     fi
   else
     echo "👍 Skipping tag removal."
+  fi
+
+  echo ""
+  echo "🧪 Initiating suspicious activity simulation..."
+  echo "🚨 WARNING: You are about to download a potentially malicious package!"
+  echo ""
+  read -p "😈 Proceed with insecure download of 'langflow==1.2.0'? (y/n): " CONFIRM_DOWNLOAD
+
+  if [[ "$CONFIRM_DOWNLOAD" == "y" || "$CONFIRM_DOWNLOAD" == "Y" ]]; then
+    echo ""
+    DOWNLOAD_CMD="pip download langflow==1.2.0 --no-deps"
+    echo "📥 Running: $DOWNLOAD_CMD"
+    echo -n "+ "
+    for ((i=0; i<${#DOWNLOAD_CMD}; i++)); do
+      echo -n "${DOWNLOAD_CMD:$i:1}"
+      sleep 0.02
+    done
+    echo ""
+    pip download langflow==1.2.0 --no-deps
+
+    echo ""
+    echo "📤 Preparing to push the downloaded wheel to Cloudsmith..."
+    WHEEL_FILE=$(ls langflow-1.2.0-*.whl 2>/dev/null | head -n 1)
+
+    if [[ -f "$WHEEL_FILE" ]]; then
+      echo "📦 Found file: $WHEEL_FILE"
+      echo ""
+      PUSH_CMD="cloudsmith push python $REPO_PATH \"$WHEEL_FILE\" -k \"\$CLOUDSMITH_API_KEY\" --tags CVE-20205-3248"
+      echo "🚀 Pushing package with CVE tag..."
+      echo -n "+ "
+      for ((i=0; i<${#PUSH_CMD}; i++)); do
+        echo -n "${PUSH_CMD:$i:1}"
+        sleep 0.02
+      done
+      echo ""
+      cloudsmith push python "$REPO_PATH" "$WHEEL_FILE" -k "$CLOUDSMITH_API_KEY" --tags CVE-20205-3248
+
+      if [[ $? -eq 0 ]]; then
+        echo "✅ Package pushed with simulated CVE tag!"
+      else
+        echo "❌ Failed to push package. You might want to double-check the file or credentials."
+      fi
+    else
+      echo "❌ Could not find the downloaded wheel file. Check if the package was downloaded correctly."
+    fi
+  else
+    echo "🚫 Skipping insecure download simulation."
   fi
 
   echo ""
