@@ -24,7 +24,6 @@ while true; do
   echo "🔍 Scanning for all packages in '$REPO_PATH'..."
   echo ""
 
-  # Show and run unfiltered command
   BASE_CMD="cloudsmith list packages \"$REPO_PATH\" -k \"\$CLOUDSMITH_API_KEY\""
   echo -n "+ "
   for ((i=0; i<${#BASE_CMD}; i++)); do
@@ -66,7 +65,6 @@ while true; do
   echo "🔎 Filtering '$FILTER_NAME' packages in '$REPO_PATH'..."
   echo ""
 
-  # Build and show the filter command
   FILTER_CMD="cloudsmith list packages \"$REPO_PATH\" -q \"format:$FILTER_NAME\" -k \"\$CLOUDSMITH_API_KEY\""
   echo -n "+ "
   for ((i=0; i<${#FILTER_CMD}; i++)); do
@@ -75,8 +73,33 @@ while true; do
   done
   echo ""
 
-  # Run the filtered command
   cloudsmith list packages "$REPO_PATH" -q "format:$FILTER_NAME" -k "$CLOUDSMITH_API_KEY"
+
+  echo ""
+  while true; do
+    read -p "📦 Enter the exact package name you'd like to inspect further: " PACKAGE_NAME
+    [[ "$PACKAGE_NAME" == "z" ]] && continue 2
+
+    TAG_CMD="cloudsmith tags list \"$REPO_PATH/$PACKAGE_NAME\" -k \"\$CLOUDSMITH_API_KEY\""
+    echo ""
+    echo "🔍 Listing tags for package '$PACKAGE_NAME'..."
+    echo -n "+ "
+    for ((i=0; i<${#TAG_CMD}; i++)); do
+      echo -n "${TAG_CMD:$i:1}"
+      sleep 0.02
+    done
+    echo ""
+
+    # Try to run tag listing and check if it succeeded
+    cloudsmith tags list "$REPO_PATH/$PACKAGE_NAME" -k "$CLOUDSMITH_API_KEY"
+    if [[ $? -eq 0 ]]; then
+      break
+    else
+      echo ""
+      echo "❌ Invalid package name: '$PACKAGE_NAME'. Please try again or press 'z' to restart."
+      echo ""
+    fi
+  done
 
   echo ""
   read -p "🔄 Press Enter to scan another repository or Ctrl+C to quit..." _
