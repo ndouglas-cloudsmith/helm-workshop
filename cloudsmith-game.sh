@@ -197,9 +197,55 @@ while true; do
 
     if [[ -f "$WHEEL_FILE" ]]; then
       echo "📦 Found file: $WHEEL_FILE"
+
       echo ""
+      echo "🔐 Setting up policy enforcement before pushing..."
+
+      wget -q https://raw.githubusercontent.com/ndouglas-cloudsmith/epm-demo/refs/heads/main/workflow1.rego -O workflow1.rego
+      ESCAPED_POLICY=$(jq -Rs . < workflow1.rego)
+
+      cat <<EOF > payload.json
+{
+  "name": "ea-workflow1",
+  "description": "Quarantine and tag packages with critical CVEs",
+  "rego": $ESCAPED_POLICY,
+  "enabled": true,
+  "is_terminal": false,
+  "precedence": 1
+}
+EOF
+
+      curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/" \
+        -H "Content-Type: application/json" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" \
+        -d @payload.json | jq .
+
+      SLUG_PERM=$(curl -s -X GET "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" | jq -r '.results[] | select(.name=="ea-workflow1") | .slug_perm')
+
+      curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/$SLUG_PERM/repositories/" \
+        -H "Content-Type: application/json" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" \
+        -d "{\"repository\": \"$REPO_SLUG\"}" | jq .
+
+      curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/$SLUG_PERM/actions/" \
+        -H "Content-Type: application/json" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" \
+        -d '{"action_type": "SetPackageState", "precedence": 1, "package_state": "QUARANTINED"}' | jq .
+
+      curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/$SLUG_PERM/actions/" \
+        -H "Content-Type: application/json" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" \
+        -d '{"action_type": "AddPackageTags", "precedence": 32767, "tags": ["policy-violated"]}' | jq .
+
+      curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/$SLUG_PERM/actions/" \
+        -H "Content-Type: application/json" \
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" \
+        -d '{"action_type": "RejectPackageUpload", "precedence": 0, "message": "Upload blocked by security policy."}' | jq .
+
+      echo ""
+      echo "🚀 Pushing package with CVE tag and policy enforcement..."
       PUSH_CMD="cloudsmith push python $REPO_PATH \"$WHEEL_FILE\" -k \"\$CLOUDSMITH_API_KEY\" --tags workflow1"
-      echo "🚀 Pushing package with CVE tag..."
       echo -n "+ "
       for ((i=0; i<${#PUSH_CMD}; i++)); do
         echo -n "${PUSH_CMD:$i:1}"
