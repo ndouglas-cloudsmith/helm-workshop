@@ -286,6 +286,35 @@ EOF
   fi
 
   echo ""
+read -p "🤔 Based on the decision log, do you trust the quarantined package? (yes/no): " TRUST_CHOICE
+
+if [[ "$TRUST_CHOICE" == "yes" ]]; then
+  echo ""
+  echo "📦 Listing quarantined packages in $REPO_PATH..."
+  cloudsmith list packages "$REPO_PATH" -q "status:quarantined" -k "$CLOUDSMITH_API_KEY"
+
+  echo ""
+  read -p "🔓 Enter the identifier of the package you'd like to remove from quarantine: " PACKAGE_ID
+
+  if [[ -n "$PACKAGE_ID" ]]; then
+    echo "🧹 Removing quarantine from package: $PACKAGE_ID"
+    cloudsmith quarantine remove "$REPO_PATH/$PACKAGE_ID" -k "$CLOUDSMITH_API_KEY"
+    echo "✅ Package restored from quarantine."
+  else
+    echo "⚠️ No identifier entered. Skipping quarantine removal."
+  fi
+
+elif [[ "$TRUST_CHOICE" == "no" ]]; then
+  echo ""
+  echo "🧼 Running cleanup script..."
+  ./cleanup.sh
+  echo "🎉 Congratulations! You have completed the lab exercise."
+  exit 0
+else
+  echo "❌ Invalid input. Please respond with 'yes' or 'no'."
+fi
+
+  echo ""
   read -p "🔄 Press Enter to scan another repository or Ctrl+C to quit..." _
   clear
 done
