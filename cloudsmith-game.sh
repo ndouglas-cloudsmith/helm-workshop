@@ -256,6 +256,25 @@ EOF
 
       if [[ $? -eq 0 ]]; then
         echo "✅ Package pushed with simulated CVE tag!"
+
+        echo ""
+        read -p "📋 Would you like to view the decision log for this policy? (y/n): " VIEW_LOG_CHOICE
+        if [[ "$VIEW_LOG_CHOICE" == "y" || "$VIEW_LOG_CHOICE" == "Y" ]]; then
+          echo ""
+          DECISION_LOG_CMD="curl -X GET \"https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/decision_logs/?policy=$SLUG_PERM\" -H \"Accept: application/json\" -H \"X-Api-Key: \$CLOUDSMITH_API_KEY\" | jq ."
+          echo "📜 Fetching decision log..."
+          echo -n "+ "
+          for ((i=0; i<${#DECISION_LOG_CMD}; i++)); do
+            echo -n "${DECISION_LOG_CMD:$i:1}"
+            sleep 0.02
+          done
+          echo ""
+          curl -s -X GET "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/decision_logs/?policy=$SLUG_PERM" \
+            -H "Accept: application/json" \
+            -H "X-Api-Key: $CLOUDSMITH_API_KEY" | jq .
+        else
+          echo "👍 Skipping decision log view."
+        fi
       else
         echo "❌ Failed to push package. You might want to double-check the file or credentials."
       fi
