@@ -1,5 +1,38 @@
 #!/bin/bash
 
+# ───────────────────────────────
+# 🛫 Pre-flight Checks
+# ───────────────────────────────
+
+echo ""
+echo "🧪 Running pre-flight checks..."
+
+# Ensure pip is available
+if ! command -v pip &> /dev/null; then
+  echo "❌ 'pip' is not installed or not in PATH. Please install Python and pip."
+  exit 1
+fi
+
+# Install/upgrade Cloudsmith CLI
+echo "📦 Installing/Updating Cloudsmith CLI..."
+pip install --upgrade cloudsmith-cli
+
+# Remove existing Langflow wheel file
+if ls langflow-1.2.0-*.whl &>/dev/null; then
+  echo "🧹 Removing existing langflow wheel file..."
+  rm -f langflow-1.2.0-*.whl
+fi
+
+# Download and run cleanup script
+echo "🧼 Downloading and running cleanup script..."
+wget -q https://raw.githubusercontent.com/ndouglas-cloudsmith/cloudsmith-cli/refs/heads/main/cleanup.sh -O cleanup.sh
+chmod +x cleanup.sh
+./cleanup.sh
+
+# ───────────────────────────────
+# 🚀 Main Application Starts Here
+# ───────────────────────────────
+
 clear
 echo "==============================="
 echo "📦 Cloudsmith Repo Scanner"
@@ -165,7 +198,7 @@ while true; do
     if [[ -f "$WHEEL_FILE" ]]; then
       echo "📦 Found file: $WHEEL_FILE"
       echo ""
-      PUSH_CMD="cloudsmith push python $REPO_PATH \"$WHEEL_FILE\" -k \"\$CLOUDSMITH_API_KEY\" --tags CVE-20205-3248"
+      PUSH_CMD="cloudsmith push python $REPO_PATH \"$WHEEL_FILE\" -k \"\$CLOUDSMITH_API_KEY\" --tags workflow1"
       echo "🚀 Pushing package with CVE tag..."
       echo -n "+ "
       for ((i=0; i<${#PUSH_CMD}; i++)); do
@@ -173,7 +206,7 @@ while true; do
         sleep 0.02
       done
       echo ""
-      cloudsmith push python "$REPO_PATH" "$WHEEL_FILE" -k "$CLOUDSMITH_API_KEY" --tags CVE-20205-3248
+      cloudsmith push python "$REPO_PATH" "$WHEEL_FILE" -k "$CLOUDSMITH_API_KEY" --tags workflow1
 
       if [[ $? -eq 0 ]]; then
         echo "✅ Package pushed with simulated CVE tag!"
