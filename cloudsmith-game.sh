@@ -300,14 +300,22 @@ if [[ "$TRUST_CHOICE" == "yes" ]]; then
     echo "🧹 Removing quarantine from package: $PACKAGE_ID"
     cloudsmith quarantine remove "$REPO_PATH/$PACKAGE_ID" -k "$CLOUDSMITH_API_KEY"
     echo "✅ Package restored from quarantine."
+    echo "🧼 Deleting OPA Policies..."
+    curl -X DELETE "https://api.cloudsmith.io/v2/workspaces/acme-corporation/policies/$SLUG_PERM/" \
+    -H "X-Api-Key: $CLOUDSMITH_API_KEY"
+    echo "🎉 Congratulations! You have completed the lab exercise."
+    exit 0
   else
     echo "⚠️ No identifier entered. Skipping quarantine removal."
   fi
 
 elif [[ "$TRUST_CHOICE" == "no" ]]; then
   echo ""
-  echo "🧼 Running cleanup script..."
+  echo "🧼 Running cleanup scripts..."
   ./cleanup.sh
+  echo "🧼 Deleting OPA Policies..."
+  curl -X DELETE "https://api.cloudsmith.io/v2/workspaces/acme-corporation/policies/$SLUG_PERM/" \
+  -H "X-Api-Key: $CLOUDSMITH_API_KEY"
   echo "🎉 Congratulations! You have completed the lab exercise."
   exit 0
 else
