@@ -206,12 +206,12 @@ while true; do
 
       cat <<EOF > payload.json
 {
-  "name": "ea-workflow1",
+  "name": "platformcon-opa-policy",
   "description": "Quarantine and tag packages with critical CVEs",
   "rego": $ESCAPED_POLICY,
   "enabled": true,
   "is_terminal": false,
-  "precedence": 1
+  "precedence": 3
 }
 EOF
 
@@ -221,7 +221,7 @@ EOF
         -d @payload.json | jq .
 
       SLUG_PERM=$(curl -s -X GET "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/" \
-        -H "X-Api-Key: $CLOUDSMITH_API_KEY" | jq -r '.results[] | select(.name=="ea-workflow1") | .slug_perm')
+        -H "X-Api-Key: $CLOUDSMITH_API_KEY" | jq -r '.results[] | select(.name=="platformcon-opa-policy") | .slug_perm')
 
       curl -s -X POST "https://api.cloudsmith.io/v2/workspaces/$CLOUDSMITH_ORG/policies/$SLUG_PERM/repositories/" \
         -H "Content-Type: application/json" \
